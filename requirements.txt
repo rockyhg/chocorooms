@@ -14,7 +14,7 @@
 numpy
 streamlit
 streamlit-webrtc
-opencv-python
+opencv-python-headless
 Pillow
 labelImg
 torch
