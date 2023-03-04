@@ -1,0 +1,21 @@
+# for development
+# pip
+# flake8
+# black
+# isort
+# natsort
+# pandas
+# matplotlib
+# jupyterlab
+# scikit-learn
+# torchinfo
+
+# for deployment
+numpy
+streamlit
+streamlit-webrtc
+opencv-python
+Pillow
+labelImg
+torch
+torchvision
