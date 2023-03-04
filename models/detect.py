@@ -1,9 +1,12 @@
+import os
+
 import torch
 
 from models.ssd import SSD
 from models.ssd_predictions import SSDPredictions
 
-WEIGHTS_FILE = "./weights/kinotake_ssd_weights_v3.pth"
+WEIGHTS_DIR = "./weights/"
+
 ssd_cfg = {
     "classes_num": 3,  # 背景クラスを含めた合計クラス数
     "input_size": 300,  # 画像の入力サイズ
@@ -16,11 +19,14 @@ ssd_cfg = {
 }
 
 
-def detect_kinotake(img, confidence_threshold=0.6, disp_score=False, disp_counter=True):
+def detect_kinotake(
+    img, weights_file, confidence_threshold=0.6, disp_score=False, disp_counter=True
+):
     """きのこ・たけのこを検出し、バウンディングボックスとラベルを表示する
 
     Parameters:
         img(ndarray): 入力画像 (BGR)
+        weights_file(str): 重みファイル名
         confidence_threshold(float): 確信度の閾値
         disp_score(bool): スコアの表示 (False)
         disp_counter(bool): カウンターの表示 (True)
@@ -29,7 +35,9 @@ def detect_kinotake(img, confidence_threshold=0.6, disp_score=False, disp_counte
         img_result(ndarray): 出力画像 (RGB)
     """
     net = SSD(phase="test", cfg=ssd_cfg)
-    net_weights = torch.load(WEIGHTS_FILE, map_location={"cuda:0": "cpu"})
+    net_weights = torch.load(
+        os.path.join(WEIGHTS_DIR, weights_file), map_location={"cuda:0": "cpu"}
+    )
     net.load_state_dict(net_weights)
 
     kinoko_takenoko_labels = ["kinoko", "takenoko"]

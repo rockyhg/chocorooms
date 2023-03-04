@@ -12,6 +12,7 @@ class VideoProcessor:
         self.threshold = 0.6
         self.disp_score = False
         self.disp_counter = True
+        self.weights = ""
 
     def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
@@ -19,6 +20,7 @@ class VideoProcessor:
         if self.state:
             img = detect_kinotake(
                 img,
+                weights_file=self.weights,
                 confidence_threshold=self.threshold,
                 disp_score=self.disp_score,
                 disp_counter=self.disp_counter,
@@ -43,7 +45,13 @@ def main():
 
     if ctx.video_processor:
         ctx.video_processor.state = st.checkbox("DETECTION")
+
         with st.sidebar:
+            ctx.video_processor.weights = st.selectbox(
+                "Select Weights:",
+                ["kinotake_ssd_v1.pth", "kinotake_ssd_v2.pth", "kinotake_ssd_v3.pth"],
+                index=2,
+            )
             ctx.video_processor.disp_score = st.checkbox("Score", value=False)
             ctx.video_processor.disp_counter = st.checkbox("Counter", value=True)
             ctx.video_processor.threshold = st.slider(
