@@ -1,6 +1,8 @@
 import av
 import cv2
+import numpy as np
 import streamlit as st
+from PIL import Image
 from streamlit_webrtc import webrtc_streamer
 
 from models.detect import detect_kinotake
@@ -37,25 +39,53 @@ def main():
     st.title("Kinoko Takenoko Detection")
     st.caption("「きのこの山」と「たけのこの里」を検出します")
 
-    ctx = webrtc_streamer(
-        key="chocorooms",
-        video_processor_factory=VideoProcessor,
-        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-    )
+    tab1, tab2 = st.tabs(["Real-time From Camera", "From Image"])
 
-    if ctx.video_processor:
-        ctx.video_processor.state = st.checkbox("DETECTION")
+    with tab1:
+        ctx = webrtc_streamer(
+            key="chocorooms",
+            video_processor_factory=VideoProcessor,
+            rtc_configuration={
+                "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+            },
+        )
 
-        with st.sidebar:
-            ctx.video_processor.weights = st.selectbox(
-                "Select Weights:",
-                ["kinotake_ssd_v1.pth", "kinotake_ssd_v2.pth", "kinotake_ssd_v3.pth"],
-                index=2,
+        if ctx.video_processor:
+            ctx.video_processor.state = st.checkbox("DETECTION")
+
+            with st.sidebar:
+                ctx.video_processor.weights = st.selectbox(
+                    "Select Weights:",
+                    [
+                        "kinotake_ssd_v1.pth",
+                        "kinotake_ssd_v2.pth",
+                        "kinotake_ssd_v3.pth",
+                    ],
+                    index=2,
+                )
+                ctx.video_processor.disp_score = st.checkbox("Score", value=False)
+                ctx.video_processor.disp_counter = st.checkbox("Counter", value=True)
+                ctx.video_processor.threshold = st.slider(
+                    "Threshold", min_value=0.0, max_value=1.0, step=0.05, value=0.6
+                )
+
+    with tab2:
+        image_file = st.file_uploader("Image", type=["jpg", "jpeg", "png"])
+        if image_file:
+            img = np.array(Image.open(image_file))
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            img = detect_kinotake(
+                img,
+                weights_file="kinotake_ssd_v3.pth",
+                confidence_threshold=0.6,
+                disp_score=False,
+                disp_counter=True,
             )
-            ctx.video_processor.disp_score = st.checkbox("Score", value=False)
-            ctx.video_processor.disp_counter = st.checkbox("Counter", value=True)
-            ctx.video_processor.threshold = st.slider(
-                "Threshold", min_value=0.0, max_value=1.0, step=0.05, value=0.6
+            st.image(
+                img,
+                caption="Uploaded Image",
+                width=None,
+                use_column_width=False,
             )
 
     with st.expander("開発ストーリー"):
@@ -84,16 +114,25 @@ def main():
         st.markdown("")
         st.markdown("**Streamlit**")
         st.markdown("- Webカメラの映像をリアルタイム表示")
-        st.markdown("- 使用ライブラリ: [streamlit-webrtc](https://github.com/whitphx/streamlit-webrtc)")
+        st.markdown(
+            "- 使用ライブラリ: [streamlit-webrtc](https://github.com/whitphx/streamlit-webrtc)"
+        )
         st.markdown("")
         st.markdown("**参考にした情報**")
         st.markdown("- [1] キカガク 画像処理特化コース")
-        st.markdown("- [2] チーム・カルポ「[物体検出とGAN、オートエンコーダー、画像処理入門](https://www.amazon.co.jp/gp/product/B09MHLC3F8/)」")
+        st.markdown(
+            "- [2] チーム・カルポ「[物体検出とGAN、オートエンコーダー、画像処理入門](https://www.amazon.co.jp/gp/product/B09MHLC3F8/)」"
+        )
         st.markdown("")
-        st.image("https://m.media-amazon.com/images/I/51jOT49zsAL._SX386_BO1,204,203,200_.jpg", width=128)
+        st.image(
+            "https://m.media-amazon.com/images/I/51jOT49zsAL._SX386_BO1,204,203,200_.jpg",
+            width=128,
+        )
         st.markdown("")
         st.markdown("**リポジトリ**")
-        st.markdown("- [GitHub - rockyhg/chocorooms](https://github.com/rockyhg/chocorooms)")
+        st.markdown(
+            "- [GitHub - rockyhg/chocorooms](https://github.com/rockyhg/chocorooms)"
+        )
 
 
 if __name__ == "__main__":
