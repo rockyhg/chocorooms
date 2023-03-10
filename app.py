@@ -1,3 +1,6 @@
+from datetime import datetime
+import os
+
 import av
 import cv2
 import numpy as np
@@ -39,6 +42,22 @@ def main():
     st.title("Kinoko Takenoko Detection")
     st.caption("「きのこの山」と「たけのこの里」を検出します")
 
+    with st.sidebar:
+        weights = st.selectbox(
+            "Select Weights:",
+            [
+                "kinotake_ssd_v1.pth",
+                "kinotake_ssd_v2.pth",
+                "kinotake_ssd_v3.pth",
+            ],
+            index=2,
+        )
+        disp_score = st.checkbox("Score", value=False)
+        disp_counter = st.checkbox("Counter", value=True)
+        threshold = st.slider(
+            "Threshold", min_value=0.0, max_value=1.0, step=0.05, value=0.6
+        )
+
     tab1, tab2 = st.tabs(["Real-time From Camera", "From Image"])
 
     with tab1:
@@ -49,44 +68,32 @@ def main():
                 "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
             },
         )
-
         if ctx.video_processor:
             ctx.video_processor.state = st.checkbox("DETECTION")
-
-            with st.sidebar:
-                ctx.video_processor.weights = st.selectbox(
-                    "Select Weights:",
-                    [
-                        "kinotake_ssd_v1.pth",
-                        "kinotake_ssd_v2.pth",
-                        "kinotake_ssd_v3.pth",
-                    ],
-                    index=2,
-                )
-                ctx.video_processor.disp_score = st.checkbox("Score", value=False)
-                ctx.video_processor.disp_counter = st.checkbox("Counter", value=True)
-                ctx.video_processor.threshold = st.slider(
-                    "Threshold", min_value=0.0, max_value=1.0, step=0.05, value=0.6
-                )
+            ctx.video_processor.weights = weights
+            ctx.video_processor.disp_score = disp_score
+            ctx.video_processor.disp_counter = disp_counter
+            ctx.video_processor.threshold = threshold
 
     with tab2:
         image_file = st.file_uploader("Image", type=["jpg", "jpeg", "png"])
         if image_file:
-            img = np.array(Image.open(image_file))
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-            img = detect_kinotake(
-                img,
-                weights_file="kinotake_ssd_v3.pth",
-                confidence_threshold=0.6,
-                disp_score=False,
-                disp_counter=True,
-            )
-            st.image(
-                img,
-                caption="Uploaded Image",
-                width=None,
-                use_column_width=False,
-            )
+            with st.spinner("Detecting ..."):
+                img = np.array(Image.open(image_file))
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                img = detect_kinotake(
+                    img,
+                    weights_file=weights,
+                    confidence_threshold=threshold,
+                    disp_score=disp_score,
+                    disp_counter=disp_counter,
+                )
+                st.image(
+                    img,
+                    caption="Uploaded Image with Detection",
+                    width=None,
+                    use_column_width="auto",
+                )
 
     with st.expander("開発ストーリー"):
         st.markdown("**データ収集**")
