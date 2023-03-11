@@ -12,8 +12,10 @@
 
 # for deployment
 numpy
-streamlit
-streamlit-webrtc
+streamlit==1.19.0
+streamlit-webrtc==0.45.0
+# streamlit
+# streamlit-webrtc
 opencv-python-headless
 Pillow
 labelImg
