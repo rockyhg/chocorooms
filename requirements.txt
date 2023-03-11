@@ -9,15 +9,13 @@
 # jupyterlab
 # scikit-learn
 # torchinfo
+# labelImg
 
 # for deployment
 numpy
 streamlit==1.19.0
 streamlit-webrtc==0.45.0
-# streamlit
-# streamlit-webrtc
 opencv-python-headless
 Pillow
-labelImg
 torch
 torchvision
