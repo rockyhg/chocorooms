@@ -1,5 +1,4 @@
-from datetime import datetime
-import os
+import io
 
 import av
 import cv2
@@ -58,7 +57,7 @@ def main():
             "Threshold", min_value=0.0, max_value=1.0, step=0.05, value=0.6
         )
 
-    tab1, tab2 = st.tabs(["Real-time From Camera", "From Image"])
+    tab1, tab2, tab3 = st.tabs(["Real-time From Camera", "From Image", "From Video"])
 
     with tab1:
         ctx = webrtc_streamer(
@@ -94,6 +93,35 @@ def main():
                     width=None,
                     use_column_width="auto",
                 )
+
+    with tab3:
+        video_file = st.file_uploader("Video", type=["mov", "mp4", "avi"])
+        if video_file is not None:
+            with open("temp.mp4", "wb") as f:
+                f.write(video_file.read())
+
+            cap = cv2.VideoCapture("temp.mp4")
+            if not cap.isOpened():
+                st.error("Sorry. Could not open the video file")
+                return
+
+            image_container = st.empty()
+
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                frame = detect_kinotake(
+                    frame,
+                    weights_file=weights,
+                    confidence_threshold=threshold,
+                    disp_score=disp_score,
+                    disp_counter=disp_counter,
+                )
+                image_container.image(frame, channels="RGB")
+
+            cap.release()
 
     with st.expander("開発ストーリー"):
         st.markdown("**データ収集**")
